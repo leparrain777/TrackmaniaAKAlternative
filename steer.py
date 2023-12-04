@@ -48,7 +48,7 @@ class KbSteer:
             if key == RIGHT:
                 self.rightPressed = False
 
-    decayrate = .99
+    decayrate = .90
     compdecayrate = 1-decayrate
     mode = False
     def attempt6_2Update(self):
@@ -93,8 +93,10 @@ class KbSteer:
                 self.attempt6_2Update()
             else:
                 self.defaultUpdate()
-            self.steer = clip(self.steer, -1.0, 1.0)
+            # self.steer = clip(self.steer, -1.0, 1.0)
             self.gamepad.left_joystick(int(MAX_JOY * self.steer), 0)
+            self.gamepad.update()
+            # print(self.steer)
 
             delta = time.perf_counter() - t
             time.sleep(max(0, TARGET - delta))
