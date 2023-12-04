@@ -1,10 +1,11 @@
 import vgamepad as vg
 import time
 from pynput.keyboard import Key, Listener
-from collections import deque
 
 ACTIVATION_KEY = 'd'
 RESET_KEY = 'f'
+LEFT = Key.left
+RIGHT = Key.right
 GAMEPAD_ATTEMPTS = 5
 
 MAX_JOY = 32768
@@ -34,9 +35,9 @@ class KbSteer:
             if key.char == RESET_KEY:
                 self.reset = True
         except AttributeError:
-            if key == Key.left:
+            if key == LEFT:
                 self.leftPressed = True
-            if key == Key.right:
+            if key == RIGHT:
                 self.rightPressed = True
 
     def onRelease(self, key):
@@ -46,9 +47,9 @@ class KbSteer:
             if key.char == RESET_KEY:
                 self.reset = False
         except AttributeError:
-            if key == Key.left:
+            if key == LEFT:
                 self.leftPressed = False
-            if key == Key.right:
+            if key == RIGHT:
                 self.rightPressed = False
 
     speed = 0.04
