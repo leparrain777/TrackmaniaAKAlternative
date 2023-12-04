@@ -2,14 +2,14 @@ import vgamepad as vg
 import time
 from pynput.keyboard import Key, Listener
 
-ACTIVATION_KEY = 'd'
-RESET_KEY = 'f'
+ACTIVATION_KEY = 'f'
+# RESET_KEY = 'f'
 LEFT = Key.left
 RIGHT = Key.right
 GAMEPAD_ATTEMPTS = 5
 
-MAX_JOY = 32768
-FPS = 120
+MAX_JOY = 32767
+FPS = 100
 TARGET = 1/FPS
 
 def clip(v, l, h):
@@ -23,17 +23,14 @@ class KbSteer:
     gamepad = None
     leftPressed = False
     rightPressed = False
-    prevLeftPressed, prevRightPressed = leftPressed, rightPressed
     activated = False
-    reset = False
     steer = 0
 
     def onPress(self, key):
         try:
             if key.char == ACTIVATION_KEY:
                 self.activated = True
-            if key.char == RESET_KEY:
-                self.reset = True
+
         except AttributeError:
             if key == LEFT:
                 self.leftPressed = True
@@ -44,56 +41,33 @@ class KbSteer:
         try:
             if key.char == ACTIVATION_KEY:
                 self.activated = False
-            if key.char == RESET_KEY:
-                self.reset = False
+
         except AttributeError:
             if key == LEFT:
                 self.leftPressed = False
             if key == RIGHT:
                 self.rightPressed = False
 
-    speed = 0.04
-    maxSpeedDecay = 0.025
-    decayTime = 0.2
-    decayStart = time.perf_counter()
-    steerSave = steer
-    base = 0.15
-    steerCap = 1
-    mode = None
+    decayrate = .99
+    compdecayrate = 1-decayrate
+    mode = False
     def attempt6_2Update(self):
-        if self.leftPressed and self.mode is None:
-            self.mode = "left"
-            self.steerCap = self.base
-            self.decayStart = time.perf_counter()
-        if self.rightPressed and self.mode is None:
-            self.mode = "right"
-            self.steerCap = self.base
-            self.decayStart = time.perf_counter()
-        speedDecay = clip((time.perf_counter() - self.decayStart) / self.decayTime, 0, 1)*self.maxSpeedDecay
-        if self.leftPressed:
-            if self.mode == "left":
-                self.steerCap += self.speed - speedDecay
-            elif self.mode == "right":
-                self.steerCap -= self.speed - speedDecay
-        if self.rightPressed:
-            if self.mode == "right":
-                self.steerCap += self.speed - speedDecay
-            elif self.mode == "left":
-                self.steerCap -= self.speed - speedDecay
-        if self.mode == "left":
-            self.steer = -self.steerCap
-        elif self.mode == "right":
-            self.steer = self.steerCap
+        if not self.mode:
+            if self.leftPressed and self.rightPressed and not self.mode:
+                self.steer = 0    
+            elif self.leftPressed and not self.mode: 
+                self.steer = -1   
+            elif self.rightPressed and not self.mode:
+                self.steer = 1
+            self.mode = True
+
+        else :
+            self.steer = self.decayrate*self.steer + (self.compdecayrate) * (-self.leftPressed+self.rightPressed)
     
     def defaultUpdate(self):
-        self.steer = 0
-        self.mode = None
-        if self.reset:
-            self.steerCap = 1
-        if self.leftPressed:
-            self.steer -= self.steerCap
-        if self.rightPressed:
-            self.steer += self.steerCap
+        self.mode = False
+        self.steer = -self.leftPressed+self.rightPressed
+        
         
 
     def start(self):
@@ -120,12 +94,7 @@ class KbSteer:
             else:
                 self.defaultUpdate()
             self.steer = clip(self.steer, -1.0, 1.0)
-
-            if self.steer <= 0:
-                self.gamepad.left_joystick(int(MAX_JOY * self.steer), 0)
-            elif self.steer > 0:
-                self.gamepad.left_joystick(int(MAX_JOY * self.steer) - 1, 0)
-            self.gamepad.update()
+            self.gamepad.left_joystick(int(MAX_JOY * self.steer), 0)
 
             delta = time.perf_counter() - t
             time.sleep(max(0, TARGET - delta))
