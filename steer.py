@@ -27,26 +27,20 @@ class KbSteer:
     steer = 0
 
     def onPress(self, key):
-        try:
-            if key.char == ACTIVATION_KEY:
-                self.activated = True
-
-        except AttributeError:
-            if key == LEFT:
-                self.leftPressed = True
-            if key == RIGHT:
-                self.rightPressed = True
+        if key.char == ACTIVATION_KEY:
+            self.activated = True
+        if key == LEFT:
+            self.leftPressed = True
+        if key == RIGHT:
+            self.rightPressed = True
 
     def onRelease(self, key):
-        try:
-            if key.char == ACTIVATION_KEY:
-                self.activated = False
-
-        except AttributeError:
-            if key == LEFT:
-                self.leftPressed = False
-            if key == RIGHT:
-                self.rightPressed = False
+        if key.char == ACTIVATION_KEY:
+            self.activated = False
+        if key == LEFT:
+            self.leftPressed = False
+        if key == RIGHT:
+            self.rightPressed = False
 
     decayrate = .90
     compdecayrate = 1-decayrate
@@ -100,6 +94,7 @@ class KbSteer:
 
             delta = time.perf_counter() - t
             time.sleep(max(0, TARGET - delta))
+            
 
 kbsteer = KbSteer()
 kbsteer.start()
